@@ -15,6 +15,11 @@ export const init: ServerInit = () => {
     console.warn(
       "PUBLIC_URL が空です。メールのリンクはリクエストの Host から作ります(本番では入れてください)",
     );
+  } else if (!URL.canParse(process.env.PUBLIC_URL.trim())) {
+    // 間違ったまま動くと、最初の注文や Webhook で 500 になる。起動のときに止める
+    throw new Error(
+      `PUBLIC_URL が URL ではありません: ${process.env.PUBLIC_URL}`,
+    );
   }
   if (!process.env.SMTP_HOST) {
     console.warn("SMTP_HOST が空です。メールは送らず標準出力に出します");
