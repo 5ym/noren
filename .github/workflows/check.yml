@@ -1,0 +1,30 @@
+name: Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+      - run: bun i --frozen-lockfile
+      # oxlint と、bun fmt --check (直さず、整形の差分があれば落とす)
+      - run: bun run lint
+      - run: bunx svelte-kit sync && bunx svelte-check --tsconfig ./tsconfig.json --tsgo
+      - run: bun test tests
+      # e2e。ビルドしたアプリを偽の IdP / SMTP と一緒に上げてブラウザから触る(e2e/serve.ts)
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run test:e2e
+        env:
+          CI: "1"
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
