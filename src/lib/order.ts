@@ -1,106 +1,110 @@
+import type { ProductKind } from "./product";
+
 /**
- * 注文の選択内容 (商品・種類・数量) の扱い。画面 (ProductPicker) とサーバーの両方で使うので、
- * サーバー専用のモジュールには依存しない。
+ * 注文の状態。
+ *   open    … Checkout の決済画面を開いたところ(まだ払っていない)
+ *   pending … 入金待ち(コンビニ払い・銀行振込、Square の会計待ち)
+ *   unpaid  … 当日払いの予約。会場で現金を受けたら paid になる
+ *   paid    … 支払い済み(無料の申し込みも含む)
+ *   failed  … 入金されずに終わった(コンビニの払込期限切れなど)
+ *   expired … 決済画面のまま失効した
  */
-import type { CatalogProduct, PayMethod } from "#lib/server/db/schema.js";
+export type OrderStatus =
+  "open" | "pending" | "unpaid" | "paid" | "failed" | "expired";
 
-/** 1 つの商品 (種類) で選べる数量の上限。 */
-export const MAX_COUNT = 99;
-
-/** 支払い方法の表示名。 */
-export const PAY_METHOD_LABELS: Record<PayMethod, string> = {
-  stripe: "カード決済",
-  cash: "当日現金払い",
-  square: "当日購入",
+/** cls は app.css の .tag に足す修飾子。空なら灰色の札 */
+export const STATUS: Record<OrderStatus, { label: string; cls: string }> = {
+  open: { label: "決済前", cls: "" },
+  pending: { label: "入金待ち", cls: "warn" },
+  unpaid: { label: "当日払い・未払い", cls: "warn" },
+  paid: { label: "支払い済み", cls: "ok" },
+  failed: { label: "未入金で終了", cls: "" },
+  expired: { label: "失効", cls: "" },
 };
 
-/** 選択内容の 1 行。種類の無い商品は `variant` が null。 */
-export type Selection = {
-  product: number;
-  variant: number | null;
+/** online … 客が自分で買った(Checkout・予約)。counter … スタッフが会場で売った */
+export type Channel = "online" | "counter";
+
+/**
+ * 支払い方法。Stripe のもの(card / konbini / customer_balance …)は
+ * payment_method_types[0] をそのまま入れるので、ここに無い値も来る。
+ */
+export const METHOD: Record<string, string> = {
+  stripe: "Stripe",
+  card: "カード",
+  konbini: "コンビニ",
+  customer_balance: "銀行振込",
+  link: "Link",
+  paypay: "PayPay",
+  cash: "現金",
+  square: "Square",
+  free: "無料",
+};
+
+export const methodLabel = (m: string) => METHOD[m] ?? m;
+
+/** 注文の 1 行。商品名と種類名は注文したときのものを写して持つ(あとで消されても読める) */
+export interface OrderItem {
+  id: number;
+  productSlug: string;
+  productName: string;
+  kind: ProductKind;
+  variantId: number | null;
+  variantName: string | null;
+  price: number;
   count: number;
-};
-
-/** 価格を確かめた注文明細 (`user_products` に書く値)。 */
-export type PricedSelection = Selection & { price: number };
-
-/** 画面で数量を持つときのキー。種類の無い商品は商品 ID だけ、種類があれば `商品:種類`。 */
-export function selectionKey(product: number, variant: number | null): string {
-  return variant === null ? String(product) : `${product}:${variant}`;
 }
 
-/** 画面の数量 (`selectionKey` → 数量) を選択内容にする。0 個のものは落とす。 */
-export function countsToSelections(
-  counts: Record<string, number>,
-): Selection[] {
-  return Object.entries(counts)
-    .filter(([, count]) => count > 0)
-    .map(([key, count]) => {
-      const [product, variant] = key.split(":");
-      return {
-        product: Number(product),
-        variant: variant === undefined ? null : Number(variant),
-        count,
-      };
-    });
+export interface Order {
+  id: number;
+  /** 客に送るリンクの鍵(`/orders/<token>`)。知っている人だけが注文を見られる */
+  token: string;
+  /** 受け取り・入場の QR に入れる番号。スタッフが読む */
+  code: string;
+  channel: Channel;
+  method: string;
+  status: OrderStatus;
+  sessionId: string | null;
+  email: string | null;
+  name: string | null;
+  amount: number;
+  createdAt: number;
+  paidAt: number | null;
+  /** 支払い期限(ms)。コンビニ払いで分かるときだけ */
+  expiresAt: number | null;
+  mailedAt: number | null;
+  /** 会場で渡した(物販は受け取り、チケットは入場)とき */
+  handedAt: number | null;
+  handedBy: string | null;
+  items: OrderItem[];
 }
 
-/** 画面の数量から合計金額を出す (価格は商品単位)。 */
-export function countsTotal(
-  products: CatalogProduct[],
-  counts: Record<string, number>,
-): number {
-  const priceById = new Map(products.map((p) => [p.id, p.price]));
-  return countsToSelections(counts).reduce(
-    (sum, s) => sum + (priceById.get(s.product) ?? 0) * s.count,
-    0,
-  );
-}
+export const itemLabel = (i: Pick<OrderItem, "productName" | "variantName">) =>
+  i.variantName ? `${i.productName}(${i.variantName})` : i.productName;
 
-const isId = (v: unknown): v is number =>
-  Number.isInteger(v) && (v as number) > 0;
+/** 会場で渡すもの(物販・チケット)が入っているか */
+export const needsHanding = (o: Pick<Order, "items">) =>
+  o.items.some((i) => i.kind !== "download");
 
-/**
- * 送られてきた選択内容 (JSON を解いたもの) を形だけ確かめる。形が崩れていれば null。
- * 0 個の行は落とし、同じ商品・種類の行は数量を足し合わせる。
- */
-export function parseSelections(raw: unknown): Selection[] | null {
-  if (!Array.isArray(raw)) return null;
-  const merged = new Map<string, Selection>();
-  for (const item of raw) {
-    if (typeof item !== "object" || item === null) return null;
-    const { product, variant = null, count } = item as Record<string, unknown>;
-    if (!isId(product) || !(variant === null || isId(variant))) return null;
-    if (!Number.isInteger(count) || (count as number) < 0) return null;
-    if (count === 0) continue;
-    const key = selectionKey(product, variant);
-    const total = (merged.get(key)?.count ?? 0) + (count as number);
-    if (total > MAX_COUNT) return null;
-    merged.set(key, { product, variant, count: total });
+/** 中身がチケットだけなら「入場」、それ以外は「受け取り」 */
+export const handWord = (o: Pick<Order, "items">) =>
+  o.items.length > 0 && o.items.every((i) => i.kind === "ticket")
+    ? "入場"
+    : "受け取り";
+
+/** QR を読んだ文字列から注文の番号を取り出す。URL(`/staff/o/<code>`)でも番号だけでもよい */
+export function codeFromScan(text: string): string | null {
+  const t = text.trim();
+  if (CODE.test(t)) return t;
+  let url: URL;
+  try {
+    url = new URL(t);
+  } catch {
+    return null;
   }
-  return [...merged.values()];
+  const m = /^\/staff\/o\/([A-Za-z0-9]+)$/.exec(url.pathname);
+  return m && CODE.test(m[1]) ? m[1] : null;
 }
 
-/**
- * 選択内容を商品の一覧と突き合わせ、今の価格をつけて返す。
- * 無い商品、種類のある商品で種類が無い・違う商品の種類、種類の無い商品に種類がある、の
- * どれかがあれば null。
- */
-export function priceSelections(
-  selections: Selection[],
-  products: CatalogProduct[],
-): PricedSelection[] | null {
-  const byId = new Map(products.map((p) => [p.id, p]));
-  const priced: PricedSelection[] = [];
-  for (const s of selections) {
-    const product = byId.get(s.product);
-    if (!product) return null;
-    const ok =
-      product.variants.length === 0
-        ? s.variant === null
-        : product.variants.some((v) => v.id === s.variant);
-    if (!ok) return null;
-    priced.push({ ...s, price: product.price });
-  }
-  return priced;
-}
+/** 受け取り・入場の番号の形。紛らわしい文字(0O1Il)を除いた 12 文字 */
+export const CODE = /^[A-HJ-NP-Za-km-z2-9]{12}$/;

@@ -2,9 +2,12 @@
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%sveltekit.assets%/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0172ad" />
+    <!-- The .ico first for anything that only looks there; browsers that
+		     understand the SVG prefer it and stay sharp at any size. -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

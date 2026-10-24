@@ -1,5 +1,7 @@
+# 手元で試すための compose。http://localhost:3000 で開く。
+# 秘密(Stripe・SMTP・OIDC)は .env に書く(.env.example を写して埋める)。
 services:
-  app:
+  noren:
     build:
       context: .
       args:
@@ -7,20 +9,13 @@ services:
         ORIGIN: http://localhost:3000
     ports:
       - "3000:3000"
-    environment:
-      - PORT=3000
-      - DATABASE_URL=/app/data/mogiri.db
-      - PUBLIC_BASE_URL=http://localhost:3000
-      # Email via Azure Communication Services (leave unset to log links instead):
-      # - ACS_CONNECTION_STRING=endpoint=https://<res>.communication.azure.com/;accesskey=<key>
-      # - ACS_SENDER_ADDRESS=DoNotReply@<guid>.azurecomm.net
-      # Fill these in to enable card / Square payments:
-      # - STRIPE_SECRET_KEY=sk_test_xxx
-      # - PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
-      # - PUBLIC_SQUARE_APPLICATION_ID=sq0idp-xxx
-      # - PUBLIC_SQUARE_CALLBACK_URL=http://localhost:3000/real/square
+    env_file:
+      - path: .env
+        required: false
     volumes:
-      - db:/app/data
+      - data:/usr/src/app/data
+      - files:/usr/src/app/files
 
 volumes:
-  db:
+  data:
+  files:

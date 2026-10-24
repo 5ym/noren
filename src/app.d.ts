@@ -1,13 +1,12 @@
-import type { SessionUser } from "#lib/server/auth.js";
+/// <reference types="vite/client" />
 
 declare global {
   namespace App {
-    // interface Error {}
     interface Locals {
-      user: SessionUser | null;
+      /** ログイン済みの管理者・スタッフ。hooks.server.ts が入れる */
+      user?: { subject: string; name: string; role: "admin" | "staff" };
     }
-    // interface PageData {}
-    // interface PageState {}
-    // interface Platform {}
   }
 }
+
+export {};

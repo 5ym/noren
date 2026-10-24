@@ -1,27 +1,31 @@
 {
-  "name": "mogiri",
-  "version": "2.0.0",
+  "name": "noren",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "bun --bun vite dev",
+    "build": "bun --bun vite build",
     "start": "bun ./build",
+    "test": "bun test tests",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --tsgo",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --tsgo --watch",
+    "test:e2e": "playwright test",
     "lint": "oxlint && bun fmt --check",
-    "format": "oxlint --fix && bun fmt",
-    "test": "bun test src",
-    "db:seed": "bun run src/lib/server/db/seed.ts"
+    "format": "oxlint --fix && bun fmt"
   },
+  "dependencies": {},
   "devDependencies": {
     "@anyblades/blades": "3.1.0-beta.5",
-    "@stripe/stripe-js": "^10.1.0",
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.64.1",
     "@sveltejs/adapter-bun": "^1.0.0",
     "@sveltejs/kit": "^3.1.0",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tiptap/core": "^3.32.0",
+    "@tiptap/pm": "^3.32.0",
+    "@tiptap/starter-kit": "^3.32.0",
     "@types/bun": "^1.4.4",
+    "@types/node": "^26.6.5",
     "@types/qrcode": "^1.5.6",
     "@typescript/native": "npm:typescript@7",
     "html5-qrcode": "^2.3.8",
@@ -34,7 +38,6 @@
     "vite": "^8.3.5"
   },
   "imports": {
-    "#lib": "./src/lib/index.js",
     "#lib/*": "./src/lib/*"
   }
 }
