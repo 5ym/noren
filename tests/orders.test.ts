@@ -34,6 +34,7 @@ import {
   itemsFromProductForm,
   SelectionError,
 } from "../src/lib/server/selection";
+import { siteOrigin } from "../src/lib/server/site";
 import { handleWebhook } from "../src/lib/server/webhook";
 
 const ORIGIN = "https://shop.example.test";
@@ -498,5 +499,68 @@ describe("ダウンロード", () => {
     expect(resolveDownload(paid.token, "o-dl", "guide.pdf")).toEqual({
       status: 410,
     });
+  });
+});
+
+describe("レビューで足したもの", () => {
+  test("同じイベントが同時に 2 回届いても、メールは 1 回", async () => {
+    outbox.length = 0;
+    const { session } = checkout(
+      itemsFromProductForm(form({}), view("o-pin")),
+      "cs_test_concurrent",
+    );
+    const results = await Promise.all([event(session()), event(session())]);
+    expect(results.map((r) => r.text).sort()).toEqual([
+      "already delivered",
+      "delivered",
+    ]);
+    expect(outbox.filter((m) => m.to === "buyer@example.test")).toHaveLength(1);
+  });
+
+  test("メールが送れなかったら送る権利を戻し、次の再送で送れる", async () => {
+    const { order, session } = checkout(
+      itemsFromProductForm(form({}), view("o-pin")),
+      "cs_test_retry",
+    );
+    const payload = JSON.stringify({
+      id: "evt_retry",
+      object: "event",
+      type: "checkout.session.completed",
+      data: { object: { object: "checkout.session", ...session() } },
+    });
+    const signature = await stripe.webhooks.generateTestHeaderStringAsync({
+      payload,
+      secret: "whsec_test_secret",
+    });
+    const failed = await handleWebhook(payload, signature, ORIGIN, async () => {
+      throw new Error("SMTP down");
+    });
+    expect(failed.status).toBe(500);
+    expect(getOrder(order.id)?.mailedAt).toBeNull();
+    expect((await event(session())).text).toBe("delivered");
+  });
+
+  test("同じアドレスの予約は 1 時間に 5 件まで", async () => {
+    const reserveOnce = () =>
+      reserve(
+        view("o-ticket"),
+        itemsFromProductForm(form({}), view("o-ticket")),
+        { email: "Flood@Example.test", name: "x" },
+        ORIGIN,
+        send,
+      );
+    for (let i = 0; i < 5; i++) await reserveOnce();
+    await expect(reserveOnce()).rejects.toThrow(/予約が続いています/);
+  });
+
+  test("PUBLIC_URL があれば、リンクの origin はリクエストの Host ではなくそれ", () => {
+    const req = new URL("https://evil.example/items/x");
+    expect(siteOrigin(req)).toBe("https://evil.example");
+    process.env.PUBLIC_URL = "https://shop.example.test/";
+    try {
+      expect(siteOrigin(req)).toBe("https://shop.example.test");
+    } finally {
+      process.env.PUBLIC_URL = "";
+    }
   });
 });

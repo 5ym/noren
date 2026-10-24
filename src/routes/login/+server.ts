@@ -2,6 +2,7 @@ import { redirect } from "@sveltejs/kit";
 
 import { enabled, redirectUri, safeReturn, start } from "#lib/server/oidc.js";
 import { PENDING_COOKIE, PENDING_TTL } from "#lib/server/session.js";
+import { siteOrigin } from "#lib/server/site.js";
 
 import type { RequestHandler } from "./$types";
 
@@ -10,7 +11,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   if (!enabled())
     return new Response("OIDC が設定されていません", { status: 404 });
   const { url: authorize, pending } = await start(
-    redirectUri(url.origin),
+    redirectUri(siteOrigin(url)),
     safeReturn(url.searchParams.get("to")),
   );
   cookies.set(PENDING_COOKIE, JSON.stringify(pending), {

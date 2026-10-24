@@ -41,6 +41,7 @@ Stripe Checkout で払うとファイルがメールで届くダウンロード�
 - 価格が 0 の商品は Checkout を通さず、メールアドレスとお名前で「申し込む」
 - 「当日払いの予約を受ける」を付けた物販・チケットは、Checkout の代わりに「当日払いで予約する」も選べる。
   会場で現金を受けたときに支払い済みになる
+- 予約と申し込みはログイン無しで受けるので、同じメールアドレスからは 1 時間に 5 件までにしてある
 - カートは無い。客は 1 回に 1 つの商品を(種類ごとの数量で)買う。会場の当日販売はまとめて売れる
 - 最初の起動で商品が 1 つも無ければ、種類ごとの見本を 1 つずつ入れる(`SAMPLE_PRODUCTS=false` で入れない)
 
@@ -105,22 +106,23 @@ IdP ごとの設定は [docs/deploy.md](docs/deploy.md)。
 
 [`.env.example`](.env.example) に全部ある。どれも空で起動でき、その機能だけが止まる(起動時のログに出る)。
 
-| 変数                                                           | 中身                                                                                     |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `DB_PATH`                                                      | SQLite のファイル(既定 `data/noren.db`)                                                  |
-| `PRODUCTS_DIR`                                                 | 商品の画像と送るファイルの置き場(既定 `data/products`)                                   |
-| `SAMPLE_PRODUCTS`                                              | `false` なら最初の起動で見本の商品を入れない                                             |
-| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`                  | Stripe のシークレットキーと Webhook の署名の鍵                                           |
-| `STRIPE_API_URL`                                               | Stripe の API の向き先を変える(stripe-mock や e2e の偽 Stripe。本番では入れない)         |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD`      | 送信用の SMTP。587 は STARTTLS、465 は最初から TLS。`SMTP_HOST` が空なら送らずログに出す |
-| `SMTP_STARTTLS`                                                | `false` で STARTTLS をしない(手元の捕まえ用サーバ向け)                                   |
-| `MAIL_FROM` / `SHOP_MAIL_TO`                                   | 差出人と、注文の控えの宛先。空なら「お店の設定」の問い合わせ先                           |
-| `OIDC_ISSUER` / `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET`        | 管理者・スタッフのログイン                                                               |
-| `OIDC_ADMIN_ROLE` / `OIDC_STAFF_ROLE` / `OIDC_ROLE_CLAIM`      | ロールの値と、ロールを読む claim                                                         |
-| `OIDC_SCOPE`                                                   | 既定 `openid profile`                                                                    |
-| `SQUARE_APPLICATION_ID` / `SQUARE_CALLBACK_URL`                | 当日販売の Square POS。戻り先の既定は `<origin>/staff/square`                            |
-| `NOTIFY_WEBHOOK_URL`                                           | Mattermost / Slack の incoming webhook                                                   |
-| `PORT` / `PROTOCOL_HEADER` / `HOST_HEADER` / `BODY_SIZE_LIMIT` | adapter-bun のもの。下の「本番」を参照                                                   |
+| 変数                                                           | 中身                                                                                                                                                                                         |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PUBLIC_URL`                                                   | メールのリンク・Stripe の戻り先・QR と OIDC の戻り先に書く origin。**本番では必ず入れる**(空ならリクエストの Host から作るので、Host を偽られると他人宛のメールに別のドメインのリンクが載る) |
+| `DB_PATH`                                                      | SQLite のファイル(既定 `data/noren.db`)                                                                                                                                                      |
+| `PRODUCTS_DIR`                                                 | 商品の画像と送るファイルの置き場(既定 `data/products`)                                                                                                                                       |
+| `SAMPLE_PRODUCTS`                                              | `false` なら最初の起動で見本の商品を入れない                                                                                                                                                 |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`                  | Stripe のシークレットキーと Webhook の署名の鍵                                                                                                                                               |
+| `STRIPE_API_URL`                                               | Stripe の API の向き先を変える(stripe-mock や e2e の偽 Stripe。本番では入れない)                                                                                                             |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD`      | 送信用の SMTP。587 は STARTTLS、465 は最初から TLS。`SMTP_HOST` が空なら送らずログに出す                                                                                                     |
+| `SMTP_STARTTLS`                                                | `false` で STARTTLS をしない(手元の捕まえ用サーバ向け)                                                                                                                                       |
+| `MAIL_FROM` / `SHOP_MAIL_TO`                                   | 差出人と、注文の控えの宛先。空なら「お店の設定」の問い合わせ先                                                                                                                               |
+| `OIDC_ISSUER` / `OIDC_CLIENT_ID` / `OIDC_CLIENT_SECRET`        | 管理者・スタッフのログイン                                                                                                                                                                   |
+| `OIDC_ADMIN_ROLE` / `OIDC_STAFF_ROLE` / `OIDC_ROLE_CLAIM`      | ロールの値と、ロールを読む claim                                                                                                                                                             |
+| `OIDC_SCOPE`                                                   | 既定 `openid profile`                                                                                                                                                                        |
+| `SQUARE_APPLICATION_ID` / `SQUARE_CALLBACK_URL`                | 当日販売の Square POS。戻り先の既定は `<origin>/staff/square`                                                                                                                                |
+| `NOTIFY_WEBHOOK_URL`                                           | Mattermost / Slack の incoming webhook                                                                                                                                                       |
+| `PORT` / `PROTOCOL_HEADER` / `HOST_HEADER` / `BODY_SIZE_LIMIT` | adapter-bun のもの。下の「本番」を参照                                                                                                                                                       |
 
 店の名前・問い合わせ先・運営者・リンク・お店についての本文・特定商取引法の表記は、環境変数ではなく
 管理画面の「お店の設定」で書く(DB の `setting` に入る)。何も書かないうちは見本の文が出る。
@@ -156,6 +158,7 @@ bun run build
 DB_PATH=./data/noren.db PRODUCTS_DIR=./data/products bun ./build
 ```
 
+- `PUBLIC_URL` に公開の URL を入れる。メールのリンク・Stripe の戻り先・QR・OIDC の戻り先はこれで作る
 - SvelteKit の CSRF 判定は、自分の origin とフォーム送信の `Origin` を突き合わせる。自分の origin は既定で
   リクエストの `Host` と `https` から求めるので、TLS を終端するリバースプロキシが `Host` をそのまま渡すなら設定は要らない。
   それ以外(平文 http で直に開く、`Host` を書き換える)は、**ビルド時**に `ORIGIN` を渡して `paths.origin` に埋め込むか、

@@ -158,6 +158,35 @@ export function markMailed(id: number): void {
 }
 
 /**
+ * メールを送る権利を取る。まだ送っていない注文だけ mailedAt を立て、立てられたかを返す。
+ * Stripe が同じイベントを同時に 2 回送ってきても、送るのは先に取れたほうだけになる。
+ * 送れなかったら releaseMail で戻し、次の再送で送り直す。
+ */
+export function claimMail(id: number): boolean {
+  return (
+    db().run(
+      "UPDATE purchase SET mailedAt = ? WHERE id = ? AND mailedAt IS NULL",
+      [Date.now(), id],
+    ).changes > 0
+  );
+}
+
+export function releaseMail(id: number): void {
+  db().run("UPDATE purchase SET mailedAt = NULL WHERE id = ?", [id]);
+}
+
+/** このメールアドレスで、いまから ms のあいだに作られた Stripe を通さない注文の数(予約の連投よけ) */
+export function recentReservations(email: string, ms: number): number {
+  return (
+    db()
+      .query<{ n: number }, [string, number]>(
+        "SELECT COUNT(*) AS n FROM purchase WHERE email = ? COLLATE NOCASE AND method IN ('cash', 'free') AND createdAt > ?",
+      )
+      .get(email, Date.now() - ms)?.n ?? 0
+  );
+}
+
+/**
  * 入金されずに終わった / 失効した。まだ払われていない注文だけ変える
  * (Stripe の expired が paid のあとに来ることは無いが、念のため)。
  */

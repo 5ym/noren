@@ -16,3 +16,4 @@ process.env.SMTP_HOST = "";
 process.env.SHOP_MAIL_TO = "shop@example.test";
 process.env.NOTIFY_WEBHOOK_URL = "";
 process.env.SAMPLE_PRODUCTS = "";
+process.env.PUBLIC_URL = "";

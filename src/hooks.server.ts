@@ -11,6 +11,11 @@ export const init: ServerInit = () => {
     if (!process.env[name])
       console.warn(`${name} が空です。カードなどのオンライン決済は動きません`);
   }
+  if (!process.env.PUBLIC_URL) {
+    console.warn(
+      "PUBLIC_URL が空です。メールのリンクはリクエストの Host から作ります(本番では入れてください)",
+    );
+  }
   if (!process.env.SMTP_HOST) {
     console.warn("SMTP_HOST が空です。メールは送らず標準出力に出します");
   }

@@ -1,3 +1,4 @@
+import { siteOrigin } from "#lib/server/site.js";
 import { handleWebhook } from "#lib/server/webhook.js";
 
 import type { RequestHandler } from "./$types";
@@ -12,6 +13,6 @@ export const POST: RequestHandler = async ({ request, url }) => {
   return handleWebhook(
     body,
     request.headers.get("stripe-signature"),
-    url.origin,
+    siteOrigin(url),
   );
 };

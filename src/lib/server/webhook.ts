@@ -6,11 +6,12 @@ import { deliver } from "./deliver";
 import type { Sender } from "./mail";
 import { notify } from "./notify";
 import {
+  claimMail,
   completeCheckout,
   getOrder,
-  markMailed,
   markUnpaid,
   orderBySession,
+  releaseMail,
 } from "./purchase";
 import stripe from "./stripe";
 
@@ -161,19 +162,23 @@ export async function handleWebhook(
     status: "paid",
   });
   const current = getOrder(order.id) as Order;
-  if (current.mailedAt !== null) return text(200, "already delivered");
+  // 先に送る権利を取る。同時に届いた 2 通目はここで止まる
+  if (!claimMail(current.id)) return text(200, "already delivered");
 
-  const origin = session.metadata?.origin || fallbackOrigin;
+  // PUBLIC_URL があればそれ、無ければ Checkout を作ったときの origin(metadata)
+  const origin = process.env.PUBLIC_URL?.trim()
+    ? fallbackOrigin
+    : session.metadata?.origin || fallbackOrigin;
   try {
     await deliver(current, origin, send);
   } catch (e) {
+    releaseMail(current.id);
     console.error("注文のメールが送れませんでした:", session.id, e);
     notify(
       `⚠️ 決済完了、メール失敗 ${summary}\n${e instanceof Error ? e.message : String(e)}\nStripe が再送するので次の配信で送り直します`,
     );
     return text(500, "delivery failed");
   }
-  markMailed(current.id);
   notify(`💴 決済完了 ${summary}`);
   return text(200, "delivered");
 }

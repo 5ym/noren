@@ -27,7 +27,9 @@ async function reserved(page: Page): Promise<string> {
   await page.goto("/items/sample-ticket");
   await page.getByLabel("一般", { exact: true }).fill("1");
   await page.getByText("当日払いで予約する(会場で現金)").click();
-  await page.getByLabel(/^メールアドレス/).fill("a11y@example.test");
+  await page
+    .getByLabel(/^メールアドレス/)
+    .fill(`a11y-${crypto.randomUUID()}@example.test`);
   await page.getByLabel("お名前").fill("見本 太郎");
   await page.getByRole("button", { name: "当日払いで予約する" }).click();
   await expect(page).toHaveURL(/\/orders\//);

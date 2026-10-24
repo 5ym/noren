@@ -53,6 +53,9 @@ Square の開発者ダッシュボードでアプリを作り、アプリケー�
 
 ## 前段のプロキシ
 
+- `PUBLIC_URL=https://shop.example.com` を必ず入れる。メールの注文ページ・ダウンロードのリンク、Stripe の戻り先、
+  QR、OIDC の戻り先はこの origin で作る(入れないとリクエストの `Host` から作るので、`Host` を偽ったリクエストで
+  他人宛のメールに別のドメインのリンクを載せられる)
 - `Host` をそのまま渡し、`X-Forwarded-Proto` を付けるなら `PROTOCOL_HEADER=x-forwarded-proto`
   (付けないなら https として扱う)。`Host` を書き換えるなら `HOST_HEADER` も。どちらも合わないと、
   フォームの送信が SvelteKit の CSRF 判定で 403 になる。固定したいときはビルド時の `ORIGIN`

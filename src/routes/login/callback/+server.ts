@@ -12,6 +12,7 @@ import {
   PENDING_COOKIE,
   SESSION_TTL,
 } from "#lib/server/session.js";
+import { siteOrigin } from "#lib/server/site.js";
 
 import type { RequestHandler } from "./$types";
 
@@ -44,7 +45,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
   let who: Awaited<ReturnType<typeof complete>>;
   try {
-    who = await complete(code, redirectUri(url.origin), pending);
+    who = await complete(code, redirectUri(siteOrigin(url)), pending);
   } catch (cause) {
     console.warn(`[auth] ログインを断りました: ${cause}`);
     return failed(cause instanceof Error ? cause.message : String(cause));

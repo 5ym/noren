@@ -5,6 +5,7 @@ import { downloadUntil } from "#lib/server/download.js";
 import { getProduct } from "#lib/server/products.js";
 import { orderByToken } from "#lib/server/purchase.js";
 import { qrSvg, staffUrl } from "#lib/server/qr.js";
+import { siteOrigin } from "#lib/server/site.js";
 
 import type { PageServerLoad } from "./$types";
 
@@ -49,7 +50,7 @@ export const load: PageServerLoad = async ({ params, url, setHeaders }) => {
       handedAt: order.handedAt,
       items: order.items,
     },
-    qr: showQr ? await qrSvg(staffUrl(url.origin, order.code)) : null,
+    qr: showQr ? await qrSvg(staffUrl(siteOrigin(url), order.code)) : null,
     downloads,
     downloadUntil: until,
     expired: until !== null && Date.now() > until,

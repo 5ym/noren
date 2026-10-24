@@ -3,6 +3,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import { listProducts } from "#lib/server/products.js";
 import { createOrder } from "#lib/server/purchase.js";
 import { itemsFromCounterForm, SelectionError } from "#lib/server/selection.js";
+import { siteOrigin } from "#lib/server/site.js";
 import { squareUrl } from "#lib/server/square.js";
 
 import type { Actions, PageServerLoad } from "./$types";
@@ -52,7 +53,7 @@ export const actions: Actions = {
         items,
       });
       const callback =
-        process.env.SQUARE_CALLBACK_URL || `${url.origin}/staff/square`;
+        process.env.SQUARE_CALLBACK_URL || `${siteOrigin(url)}/staff/square`;
       return {
         square: squareUrl(order.code, order.amount, applicationId, callback),
         amount: order.amount,

@@ -9,9 +9,14 @@ import {
   createOrder,
   markMailed,
   type NewItem,
+  recentReservations,
 } from "./purchase";
 import { SelectionError } from "./selection";
 import stripe from "./stripe";
+
+/** 同じメールアドレスで、この時間(ms)のあいだに受ける予約・申し込みの数 */
+const RESERVE_WINDOW = 60 * 60 * 1000;
+const RESERVE_LIMIT = 5;
 
 /**
  * Stripe を通さない注文。値段が 0 の商品は「申し込み」(そのまま支払い済み)、
@@ -29,6 +34,11 @@ export async function reserve(
   const free = product.price === 0;
   if (!free && (!product.payOnSite || product.kind === "download"))
     throw new SelectionError("この商品は当日払いの予約を受けていません");
+  // 認証の無い口なので、同じアドレス宛の連投(他人のアドレスへのメール爆撃)を止める
+  if (recentReservations(contact.email, RESERVE_WINDOW) >= RESERVE_LIMIT)
+    throw new SelectionError(
+      "このメールアドレスでの予約が続いています。しばらくしてからお試しください",
+    );
   const order = createOrder({
     channel: "online",
     method: free ? "free" : "cash",

@@ -7,6 +7,7 @@ import {
   itemsFromProductForm,
   SelectionError,
 } from "#lib/server/selection.js";
+import { siteOrigin } from "#lib/server/site.js";
 import { stripeConfigured } from "#lib/server/stripe.js";
 
 import type { Actions, PageServerLoad } from "./$types";
@@ -40,7 +41,7 @@ export const actions: Actions = {
     let target: string;
     try {
       const items = itemsFromProductForm(form, product);
-      target = await startCheckout(product, items, url.origin);
+      target = await startCheckout(product, items, siteOrigin(url));
     } catch (e) {
       if (e instanceof SelectionError)
         return fail(400, { error: e.message, values: keep(form) });
@@ -58,7 +59,7 @@ export const actions: Actions = {
     try {
       const items = itemsFromProductForm(form, product);
       const contact = contactFromForm(form);
-      token = (await reserve(product, items, contact, url.origin)).token;
+      token = (await reserve(product, items, contact, siteOrigin(url))).token;
     } catch (e) {
       if (e instanceof SelectionError)
         return fail(400, {
