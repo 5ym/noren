@@ -1,0 +1,49 @@
+# version control
+/.git
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+/tests
+
+# sveltekit
+/.svelte-kit/
+/build/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files (secrets must never reach the build context)
+/.env*
+
+# typescript
+*.tsbuildinfo
+
+/compose.yml
+/data/
+
+# Nothing below is copied into the image; excluding it keeps a docs or manifest
+# edit from busting the build cache.
+/.github
+/.claude
+/.vscode
+/README.md
+/LICENSE
+/renovate.json
+/docs
+/e2e
+/playwright.config.ts
+/playwright-report
+/test-results
+/compose.override.yml
+/bunfig.toml

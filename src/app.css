@@ -1,38 +1,51 @@
 /*
- * 見た目は Blades の Pico(Pico CSS v2 の後継。素の CSS)に任せる。
- * 自前のクラスや色は持たず、マークアップを Pico の書き方(article・role="button"・
- * role="group"・.grid・aria-busy など)に寄せる。ここに足すのは日本語向けの指定だけ。
+ * 見た目は Blades の Pico (Pico CSS v2 を引き継いだもの。素の CSS で、Sass は要らない)。
  *
- * Pico の部品は `blades` の層(@layer)に入った版(@anyblades/blades/layered/*)を読む。
- * 層の外にある app.css や各画面の <style> は、詳細度に関係なく必ず Pico に勝つ。
+ * 出てくる部品は箱・札・ボタン・入力欄くらいで、utility class を並べるより素の HTML を
+ * 整えるほうが小さく、後から読んで分かる。色の名前は --nr-* (noren) に持つ。
  *
- * ここで読むのは、ほぼどの画面でも使う共通の土台だけ(順番は variables → layout → content →
- * forms → components → utilities を崩さない)。card はどの画面でも article に使い、modal の
- * 土台にもなる。loading(aria-busy)はほとんどの画面で、nav はレイアウトのヘッダーで使う。
- * checkbox-radio-switch はラジオを使うのが支払い画面だけだが、後から読むと utilities の
- * [disabled] のカーソルより後ろに来て上書きしてしまうので、ここに置く。
+ * **Pico は使う部品だけ、使う場所で読み込む**(全部入りだと CSS の大半が使わない部品になる)。
+ * 部品は layered/* を使うので `blades` の層 (@layer) に入る。層に入らないこちらの規則は、詳細度に関係なく
+ * 必ず Pico に勝つ。Pico の強い selector に合わせて同じ強さで書き直す、という張り合いが要らない。
+ * 各画面の <style> も同じく層の外なので、Pico より必ず勝つ。
  *
- * 一部の画面でしか使わない部品は、その要素を描くコンポーネントの <script> で import する
- * (<style> の中で @import すると、その部品だけに閉じ込められて画面ごとに重複する)。
- * Vite が画面ごとの CSS に分け、同じ部品は一度だけ読む。
- * - content/table: OrderTable・entry/list・entry/status・real/admin
- * - content/code: entry・entry/list・entry/status・pre/qr
- * - components/group: ProductPicker
- * - components/modal: pre/pay(card はここで読む)
- * 画面ごとの CSS はここより後ろに来る。その部品が、Pico の順番で後ろにある共通の部品
- * (utilities など)と同じ要素・同じ性質を指定していないか確かめてから外に出す。
+ * ここ(全画面で読む)に置くのは共通の土台だけ。順番は variables → layout → content → forms →
+ * components → utilities を崩さない。一部の画面でしか描かない要素の部品は、その要素を描く
+ * コンポーネントの <script> で import する:
+ * content の table は表を描く画面と OrderItems(<table>)、content の code は商品説明・注文の番号を
+ * 描く画面と RichTextEditor(<code> <pre>)、forms の input-file と components の progress は
+ * admin/[slug]/+page(送るファイルの欄と送信の進み)、components の modal は Lightbox
+ * (<dialog>。modal が前提にする card も並べて読む)。
+ * <style> の中で @import してはいけない(部品がそのコンポーネント用に scoped され、使う所ごとに複製される)。
  *
- * 使っていないので読まないもの: landmarks(body > main の余白だけで、SvelteKit は画面を
- * <div style="display: contents"> で包むので当たらない。body と main の初期化は document にある)・section・figure、
- * 色・日付・ファイル・範囲・検索の入力欄、accordion(details)・dropdown・progress・tooltip。
- * 部品を足すときは、その要素を使うコンポーネントで `import '@anyblades/blades/layered/<部品>';` する。
- * ほぼどの画面でも使うものや、ほかの部品の土台になるもの(forms/basics・content/button・card)は、ここに足す。
+ * 画面ごとの CSS は同じ層の中でもここより後ろに来るので、Pico で後ろにある部品(utilities など)と
+ * 同じ要素の同じ性質を書く部品は動かさない。forms の checkbox-radio-switch は admin/[slug] でしか
+ * 使わないがここに残す。[type="checkbox"] の cursor: pointer が utilities の [disabled] の
+ * cursor: not-allowed と詳細度が同じで、後ろに回ると無効にしたチェックが指の形に戻る。
+ * forms の basics は button[type="submit"] にも当たる(公開側の「購入する」など)うえ、forms の追加分の
+ * 前提なのでここ。components の nav は +layout.svelte の <nav> で全画面に出るのでここ。
+ * content の misc は hidden 属性を display: none で隠す部品で、display を持つこちらの規則に付けた
+ * hidden を効かせるのに要る。
+ *
+ * 部品を足すときは、その要素(<details> <dialog> や aria-busy・data-tooltip など)を描くコンポーネントの
+ * <script> に import "@anyblades/blades/layered/<部品>"; を書く。部品は前提の部品を読み込まない
+ * (modal は card、group と dropdown は content の button と forms の basics、forms の追加分は basics が
+ * 前提)ので、前提がここに無ければ並べて import する。ほぼ全画面で使う部品、ここの CSS が --pico-* を
+ * 引く部品、上の順番でぶつかる部品はここに足す。部品だけが使う変数(--pico-card-* など)は
+ * variables ではなくその部品にあるので、--pico-* を引くときはどこで定義されているかも見る
+ * (いまここと各画面が引くものは、すべて variables にある)。
+ *
+ * 読まないもの(画面に当たる要素もクラスも無い、か、こちらで打ち消して前の見た目にしていた):
+ * layout の landmarks / container / grid / overflow-auto(landmarks は body > main に余白を付けるだけで、
+ * SvelteKit は画面を <div style="display: contents"> で包むので当たらない。body と main の初期化は
+ * document にある)、content の figure(下の「Pico の当て方を前の見た目に戻す」)、
+ * components の accordion(<details class="fold"> の見た目は .fold が全部決める)、
+ * forms の input-color / input-datetime / input-range / input-search、
+ * components の dropdown / group / loading / tooltip
  */
 @import "@anyblades/blades/layered/variables";
 @import "@anyblades/blades/layered/layout/document";
-@import "@anyblades/blades/layered/layout/container";
-@import "@anyblades/blades/layered/layout/grid";
-@import "@anyblades/blades/layered/layout/overflow-auto";
+@import "@anyblades/blades/layered/layout/section";
 @import "@anyblades/blades/layered/content/typography";
 @import "@anyblades/blades/layered/content/link";
 @import "@anyblades/blades/layered/content/button";
@@ -40,25 +53,562 @@
 @import "@anyblades/blades/layered/content/misc";
 @import "@anyblades/blades/layered/forms/basics";
 @import "@anyblades/blades/layered/forms/checkbox-radio-switch";
-@import "@anyblades/blades/layered/components/card";
-@import "@anyblades/blades/layered/components/loading";
 @import "@anyblades/blades/layered/components/nav";
 @import "@anyblades/blades/layered/utilities";
 
 :root {
-  /* Web フォントは束ねない(OS のフォントに任せる) */
+  /* フォントは束ねない(1 家族 1.3MB を全員に落とさせる価値が無い)。Windows なら BIZ UDPGothic、
+	   mac なら ヒラギノ、それ以外は OS の日本語フォント */
   --pico-font-family-sans-serif:
     "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", system-ui,
     sans-serif;
+  --pico-font-size: 16px;
+  --pico-line-height: 1.7;
+  --pico-spacing: 1rem;
+  --pico-typography-spacing-vertical: 0.85rem;
+  --pico-form-element-spacing-vertical: 0.5rem;
+  --pico-form-element-spacing-horizontal: 0.75rem;
+  --pico-border-radius: 0.5rem;
+
+  /*
+	 * 読む文章の幅。`prose` の 65ch を、フォントに依存しない長さに固定したもの
+	 * (BIZ UDPGothic の `0` は 0.76em、フォールバックは約 0.56em で、
+	 *  読み込み前後で段の幅が飛ぶ)
+	 */
+  --nr-page-width: 49.5rem;
+  /* サイト全体の幅。商品のグリッドは本文より広く使う。横に大きいモニタで間延びさせない */
+  --nr-site-width: 80rem;
+  --nr-radius-box: 1rem;
 }
 
+/*
+ * 店の色。紺(favicon と同じ)を主に、差し色は橙。OS の明暗に合わせる(light-dark)。
+ * 暗いほうは地を紺寄りの黒にして、紺の文字と面を明るく持ち上げる。
+ * どちらも文字と地の差は WCAG 2.2 AA(4.5:1)を満たすようにしてある(e2e の axe で確かめる)
+ */
+:root {
+  color-scheme: light dark;
+  --pico-background-color: light-dark(
+    oklch(96.5% 0.008 80),
+    oklch(19% 0.02 255)
+  );
+  --pico-color: light-dark(oklch(26% 0.03 255), oklch(92% 0.01 255));
+  --pico-muted-color: var(--nr-muted);
+  --pico-primary: light-dark(oklch(33% 0.075 255), oklch(80% 0.08 255));
+  --pico-primary-background: light-dark(
+    oklch(33% 0.075 255),
+    oklch(80% 0.08 255)
+  );
+  --pico-primary-border: var(--pico-primary-background);
+  --pico-primary-hover: light-dark(oklch(27% 0.075 255), oklch(88% 0.06 255));
+  --pico-primary-hover-background: var(--pico-primary-hover);
+  --pico-primary-hover-border: var(--pico-primary-hover);
+  --pico-primary-underline: light-dark(
+    oklch(33% 0.075 255 / 0.35),
+    oklch(80% 0.08 255 / 0.45)
+  );
+  --pico-primary-focus: light-dark(
+    oklch(33% 0.075 255 / 0.25),
+    oklch(80% 0.08 255 / 0.3)
+  );
+  --pico-primary-inverse: light-dark(oklch(98% 0.005 255), oklch(20% 0.03 255));
+  --pico-form-element-background-color: light-dark(
+    oklch(99.2% 0.004 80),
+    oklch(23% 0.02 255)
+  );
+  --pico-form-element-border-color: light-dark(
+    oklch(70% 0.012 80),
+    oklch(50% 0.02 255)
+  );
+  --pico-form-element-color: var(--pico-color);
+
+  --nr-surface: light-dark(oklch(99.2% 0.004 80), oklch(23% 0.02 255));
+  --nr-base-200: light-dark(oklch(96.5% 0.008 80), oklch(21% 0.02 255));
+  --nr-base-300: light-dark(oklch(91% 0.012 80), oklch(33% 0.02 255));
+  --nr-primary: var(--pico-primary);
+  --nr-primary-content: var(--pico-primary-inverse);
+  /* トップの帯と足元。どちらの明暗でも紺地に白 */
+  --nr-banner: oklch(33% 0.075 255);
+  --nr-banner-content: oklch(98% 0.005 255);
+  --nr-secondary: light-dark(oklch(52% 0.17 45), oklch(74% 0.15 55));
+  --nr-secondary-content: light-dark(oklch(99% 0.01 45), oklch(20% 0.04 45));
+  --nr-info: light-dark(oklch(48% 0.12 235), oklch(78% 0.1 235));
+  --nr-info-content: light-dark(oklch(99% 0.01 235), oklch(20% 0.03 235));
+  --nr-success: light-dark(oklch(45% 0.12 150), oklch(78% 0.13 150));
+  --nr-success-content: light-dark(oklch(99% 0.01 150), oklch(20% 0.03 150));
+  --nr-warning: light-dark(oklch(80% 0.16 80), oklch(80% 0.14 80));
+  --nr-warning-content: oklch(25% 0.05 80);
+  --nr-error: light-dark(oklch(52% 0.2 25), oklch(72% 0.17 25));
+  --nr-error-content: light-dark(oklch(99% 0.01 25), oklch(20% 0.04 25));
+  /* 注意書きの中など、淡い地に置く赤い文字 */
+  --nr-error-text: light-dark(oklch(45% 0.18 25), oklch(82% 0.12 25));
+  --nr-muted: light-dark(oklch(45% 0.02 255), oklch(74% 0.02 255));
+  --nr-shadow: 0 1px 2px rgb(20 26 40 / 0.06), 0 1px 3px rgb(20 26 40 / 0.06);
+  --nr-shadow-lg: 0 10px 24px rgb(20 26 40 / 0.14);
+  --pico-text-selection-color: light-dark(
+    rgb(116 139 248 / 0.25),
+    rgb(137 153 249 / 0.3)
+  );
+}
+/* 明暗を固定したいとき(<html data-theme="light|dark">) */
+[data-theme="light"] {
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html {
+  font-size: var(--pico-font-size);
+}
 body {
+  margin: 0;
+  background: var(--pico-background-color);
   /* 日本語を文節で折り返す */
   word-break: auto-phrase;
   line-break: strict;
 }
+p,
+li,
+dd {
+  text-wrap: pretty;
+}
 
-/* 横に流す表は列を潰させない(狭い画面で1文字ずつ折り返すのを防ぐ) */
-.overflow-auto > table {
+/*
+ * **Pico の当て方を前の見た目に戻す。** 前は Pico の Sass で外していた部品のうち、
+ * 読まないだけでは戻らないもの(ほかの部品も同じ要素に当たる)と、読まずに済まないものをここで戻す。
+ * 折りたたみ (<details>) の components の accordion は読まないので、もう戻すものが無い
+ */
+/* 図 (<figure>)。content の figure は読まないが、typography も上の余白を 0 にする。前はブラウザの既定の余白のままだった */
+figure {
+  margin: revert;
+  padding: revert;
+}
+/* ファイルの欄 (<input type="file">)。forms の input-file (admin/[slug] で読む) は枠と地を消して、中のボタンを小さくする */
+[type="file"] {
+  --pico-color: var(--pico-form-element-color);
+  margin-left: 0;
+  padding: 0;
+  border-radius: var(--pico-border-radius);
+  background-color: var(--pico-background-color);
+}
+[type="file"]::file-selector-button {
+  margin-right: revert;
+  padding: var(--pico-form-element-spacing-vertical)
+    var(--pico-form-element-spacing-horizontal);
+}
+/* Pico は欄のどこに乗っても中のボタンの色を変え、フォーカスの輪も付ける。前はボタンそのものに乗ったときだけ色が変わった */
+[type="file"]:is(:hover, :active, :focus)::file-selector-button {
+  --pico-background-color: var(--pico-secondary-background);
+  --pico-border-color: var(--pico-secondary-border);
+  --pico-box-shadow: var(--pico-button-box-shadow, 0 0 0 rgb(0 0 0 / 0));
+}
+[type="file"]::file-selector-button:is(:hover, :active) {
+  --pico-background-color: var(--pico-secondary-hover-background);
+  --pico-border-color: var(--pico-secondary-hover-border);
+}
+
+/* Pico は段落・入力欄の下に大きな余白を付ける。並べ方は各画面の gap で決めるので外す */
+input:not([type="checkbox"], [type="radio"]),
+select,
+textarea,
+button,
+[type="button"],
+[type="submit"],
+[role="button"],
+fieldset,
+figure,
+table,
+p,
+ul,
+ol,
+dl,
+dt,
+dd,
+h1,
+h2,
+h3,
+h4,
+label,
+details,
+article,
+blockquote,
+hgroup {
+  margin-bottom: 0;
+}
+h1,
+h2,
+h3,
+h4 {
+  --pico-font-weight: 700;
+  line-height: 1.3;
+}
+h1 {
+  font-size: 1.75rem;
+}
+h2 {
+  font-size: 1.4rem;
+}
+h3 {
+  font-size: 1.05rem;
+}
+
+/* ---- 幅 ---- */
+/* ヘッダー・本文・フッターの左右を揃える。読む文章の幅は .prose で別に絞る */
+.page {
+  width: 100%;
+  max-width: var(--nr-site-width);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+.prose {
+  max-width: var(--nr-page-width);
+}
+.prose > * + * {
+  margin-top: 0.85rem;
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.3rem;
+}
+.prose li + li {
+  margin-top: 0.2rem;
+}
+
+/* ---- ボタン ---- */
+button,
+[type="button"],
+[type="submit"],
+[role="button"],
+a.button {
+  min-height: 2.5rem;
+  font-size: 0.925rem;
+  font-weight: 700;
   white-space: nowrap;
+}
+button[type="submit"] {
+  width: auto;
+}
+a.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: var(--pico-border-width) solid var(--pico-primary-border);
+  border-radius: var(--pico-border-radius);
+  padding: var(--pico-form-element-spacing-vertical)
+    var(--pico-form-element-spacing-horizontal);
+  background: var(--pico-primary-background);
+  color: var(--pico-primary-inverse);
+  line-height: var(--pico-line-height);
+  text-decoration: none;
+}
+a.button:hover {
+  border-color: var(--pico-primary-hover-border);
+  background: var(--pico-primary-hover-background);
+  color: var(--pico-primary-inverse);
+}
+a.button.outline,
+button.outline {
+  background: transparent;
+  color: var(--pico-primary);
+}
+a.button.outline:hover,
+button.outline:hover {
+  background: var(--pico-primary-focus);
+  color: var(--pico-primary-hover);
+}
+a.button.ghost,
+button.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: inherit;
+}
+a.button.ghost:hover,
+button.ghost:hover {
+  border-color: transparent;
+  background: var(--nr-base-300);
+  color: inherit;
+}
+a.button.ghost[aria-current="page"] {
+  background: var(--nr-base-300);
+  color: inherit;
+}
+/* 買うボタン。ここだけ橙で、画面の中で一番強い */
+a.button.buy,
+button.buy {
+  border-color: var(--nr-secondary);
+  background: var(--nr-secondary);
+  color: var(--nr-secondary-content);
+}
+a.button.buy:hover,
+button.buy:hover {
+  border-color: var(--nr-secondary);
+  background: color-mix(in oklch, var(--nr-secondary) 88%, black);
+  color: var(--nr-secondary-content);
+}
+button.danger,
+a.button.danger {
+  border-color: transparent;
+  background: transparent;
+  color: var(--nr-error);
+}
+button.danger:hover,
+a.button.danger:hover {
+  border-color: var(--nr-error);
+  background: transparent;
+  color: var(--nr-error);
+}
+.mini {
+  min-height: 2rem;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.8rem;
+}
+.big {
+  min-height: 3rem;
+  padding: 0.7rem 1.4rem;
+  font-size: 1.05rem;
+}
+
+/* ---- 入力欄 ---- */
+label {
+  font-size: 0.9rem;
+}
+input,
+select,
+textarea {
+  font-size: 0.925rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.field > .lab {
+  color: var(--nr-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.field > input,
+.field > select,
+.field > textarea {
+  margin: 0;
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.check input {
+  margin: 0;
+}
+
+/* ---- 箱 ---- */
+.panel {
+  border: 1px solid var(--nr-base-300);
+  border-radius: var(--pico-border-radius);
+  background: var(--nr-surface);
+}
+.panel.pad {
+  padding: 1rem;
+}
+.panel.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+}
+.panel.sunk {
+  border-color: transparent;
+  background: var(--nr-base-200);
+}
+
+/* ---- 注意書き ---- */
+.note {
+  display: flex;
+  gap: 0.6rem;
+  border: 1px solid var(--nr-base-300);
+  border-left: 4px solid var(--nr-muted);
+  border-radius: var(--pico-border-radius);
+  background: var(--nr-base-200);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+}
+.note.err {
+  border-color: color-mix(in oklch, var(--nr-error) 25%, transparent);
+  border-left-color: var(--nr-error);
+  background: color-mix(
+    in oklch,
+    var(--nr-error) 12%,
+    var(--pico-background-color)
+  );
+  color: var(--nr-error-text);
+}
+.note.ok {
+  border-color: color-mix(in oklch, var(--nr-success) 25%, transparent);
+  border-left-color: var(--nr-success);
+  background: color-mix(
+    in oklch,
+    var(--nr-success) 12%,
+    var(--pico-background-color)
+  );
+}
+.note.warn {
+  border-color: color-mix(in oklch, var(--nr-warning) 30%, transparent);
+  border-left-color: var(--nr-warning);
+  background: color-mix(
+    in oklch,
+    var(--nr-warning) 14%,
+    var(--pico-background-color)
+  );
+}
+
+/* ---- 札 ---- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--nr-base-300);
+  border-radius: 999px;
+  background: var(--nr-surface);
+  padding: 0.1rem 0.6rem;
+  color: var(--nr-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.tag.secondary {
+  border-color: transparent;
+  background: var(--nr-secondary);
+  color: var(--nr-secondary-content);
+}
+.tag.info {
+  border-color: transparent;
+  background: var(--nr-info);
+  color: var(--nr-info-content);
+}
+.tag.warn {
+  border-color: transparent;
+  background: var(--nr-warning);
+  color: var(--nr-warning-content);
+}
+.tag.ok {
+  border-color: transparent;
+  background: var(--nr-success);
+  color: var(--nr-success-content);
+}
+.tag.solid {
+  border-color: transparent;
+  background: var(--nr-primary);
+  color: var(--nr-primary-content);
+}
+.tag.lg {
+  padding: 0.25rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+/* ---- 折りたたみ ---- */
+details.fold {
+  border: 1px solid var(--nr-base-300);
+  border-radius: var(--pico-border-radius);
+  background: var(--nr-surface);
+}
+details.fold > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+details.fold > summary::-webkit-details-marker {
+  display: none;
+}
+details.fold > summary::after {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: auto;
+  border-right: 2px solid var(--nr-muted);
+  border-bottom: 2px solid var(--nr-muted);
+  transform: rotate(45deg) translate(-0.1rem, -0.1rem);
+}
+details.fold[open] > summary::after {
+  transform: rotate(-135deg);
+}
+details.fold > .inner {
+  border-top: 1px solid var(--nr-base-300);
+  padding: 0.85rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+/* ---- 表 ---- */
+table {
+  --pico-border-color: var(--nr-base-300);
+  font-size: 0.9rem;
+}
+th,
+td {
+  padding: 0.45rem 0.65rem;
+  vertical-align: baseline;
+}
+thead th {
+  background: var(--nr-base-200);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.scroll-x {
+  overflow-x: auto;
+}
+
+/* ---- 小物 ---- */
+.muted {
+  color: var(--nr-muted);
+}
+.small {
+  font-size: 0.875rem;
+}
+.tiny {
+  font-size: 0.78rem;
+}
+.nums {
+  font-variant-numeric: tabular-nums;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.grow {
+  flex: 1 1 auto;
+}
+/* 読み込み中の丸。ボタンの中にも置く */
+.spin {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: nr-spin 0.8s linear infinite;
+}
+@keyframes nr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
 }

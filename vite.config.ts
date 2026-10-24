@@ -1,15 +1,11 @@
 import adapter from "@sveltejs/adapter-bun";
 import { sveltekit } from "@sveltejs/kit/vite";
-import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
     // SvelteKit の設定もここに置く (SvelteKit 3 から `svelte.config.*` は読まれない)。
     sveltekit({
-      preprocess: vitePreprocess(),
-      // adapter-bun の出力を `bun ./build` で動かす。
-      // Bun で起動するので、サーバ側では `bun:sqlite` をそのまま使える。
       adapter: adapter(),
       paths: {
         // 公開 URL の origin (CSRF 判定に使う)。adapter-bun に実行時の `ORIGIN` は
@@ -17,6 +13,24 @@ export default defineConfig({
         // リクエストの Host (+ `PROTOCOL_HEADER`、既定 https) から求める。
         origin: process.env.ORIGIN || undefined,
       },
+      version: {
+        // The commit the image was built from, so every rollout publishes a
+        // distinct version.json. Falls back to SvelteKit's build timestamp
+        // when built outside CI.
+        name: process.env.APP_VERSION || undefined,
+        // Let already-open tabs notice a deploy on their own, rather than
+        // only when a navigation has already failed.
+        pollInterval: 60_000,
+      },
     }),
   ],
+  server: {
+    host: true,
+  },
+  ssr: {
+    external: ["bun:sqlite"],
+  },
+  optimizeDeps: {
+    exclude: ["bun:sqlite"],
+  },
 });

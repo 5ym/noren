@@ -1,9 +1,8 @@
-# Ensure Vite's dev/build SSR pipeline runs on the Bun runtime so that
-# `bun:sqlite` (used by the Drizzle SQLite driver) resolves correctly.
-[run]
-bun = true
+[test]
+# 環境変数と一時ディレクトリを import より先に用意する(tests/setup.ts)
+preload = ["./tests/setup.ts"]
 
 # 整形 (`bun fmt`。`package.json` の format・lint から呼ぶ)。書き方は既定のまま、外すものだけ
 [fmt]
-# import を並べ替える (組の分け方は既定のまま。副作用だけの import は動かさない)
+# import を並べ替える。組分けは既定のまま、副作用だけの import (CSS など) は動かさない
 sortImports = true

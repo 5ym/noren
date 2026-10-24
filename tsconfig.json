@@ -1,12 +1,13 @@
 {
   "extends": "$app/tsconfig",
   "compilerOptions": {
-    "types": ["bun", "$app/types"],
+    "rewriteRelativeImportExtensions": true,
     "sourceMap": true,
     "strict": true,
-    // `#lib` は package.json の `imports` で解決されるが、`svelte-check --tsgo` はそれ経由の
-    // `.svelte` の型を拾えず、コンポーネントの props が検査されなくなる。ここでも同じ道を示す
+    "types": ["bun", "$app/types"],
+    // #lib は package.json の imports で解決されるが、svelte-check --tsgo はそれ経由の
+    // .svelte の型を拾えず、コンポーネントの props が検査されなくなる。同じ対応を paths にも置く
     "paths": { "#lib/*": ["./src/lib/*"] }
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "tests", "vite.config.ts"]
 }

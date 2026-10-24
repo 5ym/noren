@@ -1,3 +1,4 @@
-// Blades の層入りの部品(@anyblades/blades/layered/*)は CSS だけで型がない。TypeScript 6 は
-// 型のない副作用 import を誤りにする(noUncheckedSideEffectImports)ので、中身のないモジュールとして宣言する
-declare module "@anyblades/blades/layered/*" {}
+// Blades の部品は CSS だけで、名前が .css で終わらないので vite/client の "*.css" に当たらない。
+// TypeScript 6 からは副作用だけの import も解決先を確かめる(noUncheckedSideEffectImports)ので、
+// コンポーネントで import "@anyblades/blades/layered/<部品>"; と書くと svelte-check が落ちる。型は無いと宣言しておく
+declare module "@anyblades/blades/layered/*";

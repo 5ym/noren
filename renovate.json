@@ -3,7 +3,12 @@
   "extends": ["github>5ym/repo-config"],
   "packageRules": [
     {
-      "description": "@anyblades/blades はプレリリースに固定中で、部品ごとの入り口がまだ変わり得る。CI が無いので自動では入れない。ほかの更新の自動マージを止めないよう、まとめの PR から外して別の PR にする。安定版に戻したらこの規則を消す",
+      "description": "svelte-check は TypeScript 6 と 7 を並べて入れ、7 は @typescript/native の別名で読む。この項目を 7 に上げると組む相手の 6 が無くなり、`bun run check` が起動しなくなる。svelte-check が両方を要らなくなるまで 7 に上げない",
+      "matchDepNames": ["typescript"],
+      "allowedVersions": "<7"
+    },
+    {
+      "description": "@anyblades/blades はプレリリースに固定中で、規則がどの部品に入るかがまだ変わり得る。部品の間で規則が動くとビルドは通ったまま見た目だけが変わるので、自動ではマージしない。ほかの更新の自動マージを止めないよう、まとめの PR から外して別の PR にする。安定版に戻したらこの規則を消す",
       "matchPackageNames": ["@anyblades/blades"],
       "groupName": "@anyblades/blades",
       "groupSlug": "blades",
