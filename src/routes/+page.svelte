@@ -284,6 +284,11 @@
     font-size: 2rem;
     line-height: 1.2;
   }
+  /* 段落と並びは Blades が本文の色を付けるので、帯の白を引き継がせる (明るい表示で紺に暗い字になっていた) */
+  .lead,
+  .points {
+    color: inherit;
+  }
   .lead {
     max-width: var(--nr-page-width);
   }
