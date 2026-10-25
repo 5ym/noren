@@ -53,6 +53,85 @@ describe("richtext", () => {
     expect(sanitizeHtml("<a>x</a>")).toBe("x");
   });
 
+  test("消した跡からタグが組み上がらない", () => {
+    expect(sanitizeHtml("<scr<script>ipt>alert(1)</script>")).toBe(
+      "ipt&gt;alert(1)",
+    );
+    expect(sanitizeHtml("<<script>script>alert(1)<</script>/script>")).toBe(
+      "&lt;/script&gt;",
+    );
+    expect(sanitizeHtml("<!--<!-- x -->--><p>a</p>")).toBe("--&gt;<p>a</p>");
+    // 閉じていないコメントやタグは、ブラウザと同じく残りを捨てる
+    expect(sanitizeHtml("<p>a</p><!-- <script>alert(1)</script>")).toBe(
+      "<p>a</p>",
+    );
+    expect(sanitizeHtml('<p>a</p><a href="https://e.com/ x')).toBe("<p>a</p>");
+    expect(sanitizeHtml("<p>a</p><script>alert(1)")).toBe("<p>a</p>");
+    expect(sanitizeHtml("<SCRIPT >alert(1)</SCRIPT ><p>a</p>")).toBe(
+      "<p>a</p>",
+    );
+  });
+
+  test("文の中の < > & はエスケープし、実体参照は 1 回だけ戻す", () => {
+    expect(sanitizeHtml("<p>1 < 2 & 3 > 0</p>")).toBe(
+      "<p>1 &lt; 2 &amp; 3 &gt; 0</p>",
+    );
+    expect(sanitizeHtml("<p>&lt;script&gt;</p>")).toBe("<p>&lt;script&gt;</p>");
+    // &amp;lt; は「&lt;」という文字。< にはならない
+    expect(sanitizeHtml("<p>&amp;lt;script&amp;gt;</p>")).toBe(
+      "<p>&amp;lt;script&amp;gt;</p>",
+    );
+    expect(htmlToText("<p>&amp;lt;script&amp;gt;</p>")).toBe("&lt;script&gt;");
+    expect(htmlToText("<p>&#60;b&#x3e; &quot;q&quot; &#39;s&#39;</p>")).toBe(
+      "<b> \"q\" 's'",
+    );
+  });
+
+  test("href の引用符で属性を抜け出せない", () => {
+    expect(
+      sanitizeHtml(`<a href='https://e.com/"onmouseover="alert(1)'>x</a>`),
+    ).toBe(
+      '<a href="https://e.com/&quot;onmouseover=&quot;alert(1)" rel="noopener" target="_blank">x</a>',
+    );
+    expect(sanitizeHtml('<a href="https://e.com/"><b>x</b></a>')).toBe(
+      '<a href="https://e.com/" rel="noopener" target="_blank"><strong>x</strong></a>',
+    );
+    expect(sanitizeHtml("<a href=https://e.com/'x>y</a>")).toBe(
+      '<a href="https://e.com/&#39;x" rel="noopener" target="_blank">y</a>',
+    );
+    // 属性値の &amp; は & として読み、出すときに 1 回だけエスケープする
+    expect(sanitizeHtml('<a href="https://e.com/?a=1&amp;b=2">x</a>')).toBe(
+      '<a href="https://e.com/?a=1&amp;b=2" rel="noopener" target="_blank">x</a>',
+    );
+  });
+
+  test("実体参照で書いた javascript: も通らない", () => {
+    expect(sanitizeHtml('<a href="&#106;avascript:alert(1)">x</a>')).toBe("x");
+    expect(sanitizeHtml('<a href="java&#x09;script:alert(1)">x</a>')).toBe("x");
+    expect(
+      sanitizeHtml('<a href="javascript:x" href="https://e.com/">x</a>'),
+    ).toBe("x");
+  });
+
+  test("何度通しても同じ", () => {
+    for (const html of [
+      "<p>&amp;lt; &lt; &gt; &quot; ' \"</p>",
+      `<a href='https://e.com/?q="&amp;'>x</a>`,
+      "<scr<script>ipt>alert(1)</script>",
+      "<p></p><p>a&nbsp;b</p><p></p>",
+    ]) {
+      const once = sanitizeHtml(html);
+      expect(sanitizeHtml(once)).toBe(once);
+    }
+  });
+
+  test("空の段落の繰り返しが長くても時間がかからない", () => {
+    const html = `<p></p>${" <p></p>".repeat(50_000)}x`;
+    const started = performance.now();
+    expect(sanitizeHtml(html)).toBe("x");
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
+
   test("空の段落は無いものとする", () => {
     expect(sanitizeHtml("<p></p>")).toBe("");
     expect(sanitizeHtml("<p></p><p>a</p><p></p>")).toBe("<p>a</p>");
