@@ -111,8 +111,11 @@ class Connection {
     });
   }
 
-  /** コマンドを送って応答を待つ。期待した code でなければ投げる。 */
-  async command(line: string, expect: number, label = line): Promise<Reply> {
+  /**
+   * コマンドを送って応答を待つ。期待した code でなければ投げる。エラーに出すのは
+   * 固定の label だけで、送った行(パスワードや宛先が入る)は出さない。
+   */
+  async command(line: string, expect: number, label: string): Promise<Reply> {
     this.socket.write(`${line}\r\n`);
     const reply = await this.read();
     if (reply.code !== expect) {
@@ -124,7 +127,7 @@ class Connection {
   }
 
   /** 応答の code だけ見て、複数の候補を許す(RCPT TO は 250 か 251)。 */
-  async commandAny(line: string, expects: number[], label = line) {
+  async commandAny(line: string, expects: number[], label: string) {
     this.socket.write(`${line}\r\n`);
     const reply = await this.read();
     if (!expects.includes(reply.code)) {
@@ -289,14 +292,14 @@ export async function sendSmtp(
         `SMTP greeting: ${greeting.code} ${greeting.lines.join(" / ")}`,
       );
     }
-    await conn.command(`EHLO ${me}`, 250);
+    await conn.command(`EHLO ${me}`, 250, "EHLO");
     if (!implicitTls && options.starttls !== false) {
-      await conn.command("STARTTLS", 220);
+      await conn.command("STARTTLS", 220, "STARTTLS");
       await conn.upgradeToTls(options.host);
-      await conn.command(`EHLO ${me}`, 250);
+      await conn.command(`EHLO ${me}`, 250, "EHLO");
     }
     if (options.user) {
-      await conn.command("AUTH LOGIN", 334);
+      await conn.command("AUTH LOGIN", 334, "AUTH LOGIN");
       await conn.command(
         Buffer.from(options.user).toString("base64"),
         334,
@@ -309,9 +312,17 @@ export async function sendSmtp(
         "AUTH LOGIN (password)",
       );
     }
-    await conn.command(`MAIL FROM:<${addressOf(options.from)}>`, 250);
-    await conn.commandAny(`RCPT TO:<${addressOf(message.to)}>`, [250, 251]);
-    await conn.command("DATA", 354);
+    await conn.command(
+      `MAIL FROM:<${addressOf(options.from)}>`,
+      250,
+      "MAIL FROM",
+    );
+    await conn.commandAny(
+      `RCPT TO:<${addressOf(message.to)}>`,
+      [250, 251],
+      "RCPT TO",
+    );
+    await conn.command("DATA", 354, "DATA");
     conn.write(`${dotStuff(buildMime(options.from, message))}\r\n.\r\n`);
     const accepted = await conn.read();
     if (accepted.code !== 250) {
@@ -319,7 +330,7 @@ export async function sendSmtp(
         `SMTP DATA: ${accepted.code} ${accepted.lines.join(" / ")}`,
       );
     }
-    await conn.command("QUIT", 221).catch(() => {
+    await conn.command("QUIT", 221, "QUIT").catch(() => {
       // 受理された後なので、QUIT の失敗は結果を変えない
     });
   } finally {

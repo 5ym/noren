@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: [main]
 
+# GITHUB_TOKEN は読むだけ。upload-artifact と gha キャッシュは ACTIONS_RUNTIME_TOKEN を使うので足りる
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
