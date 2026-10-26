@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "@anyblades/blades/layered/content/code";
+  import "@anyblades/blades/content/code";
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import { untrack } from "svelte";

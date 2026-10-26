@@ -7,7 +7,7 @@
     STATUS,
   } from "#lib/order.js";
   import { yen } from "#lib/product.js";
-  import "@anyblades/blades/layered/content/table";
+  import "@anyblades/blades/content/table";
   import type { PageProps } from "./$types";
 
   let { data }: PageProps = $props();
