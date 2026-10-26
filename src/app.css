@@ -5,7 +5,7 @@
  * 整えるほうが小さく、後から読んで分かる。色の名前は --nr-* (noren) に持つ。
  *
  * **Pico は使う部品だけ、使う場所で読み込む**(全部入りだと CSS の大半が使わない部品になる)。
- * 部品は layered/* を使うので `blades` の層 (@layer) に入る。層に入らないこちらの規則は、詳細度に関係なく
+ * 部品 (@anyblades/blades/<部品>) は `blades` の層 (@layer) に入る。層に入らないこちらの規則は、詳細度に関係なく
  * 必ず Pico に勝つ。Pico の強い selector に合わせて同じ強さで書き直す、という張り合いが要らない。
  * 各画面の <style> も同じく層の外なので、Pico より必ず勝つ。
  *
@@ -28,7 +28,7 @@
  * hidden を効かせるのに要る。
  *
  * 部品を足すときは、その要素(<details> <dialog> や aria-busy・data-tooltip など)を描くコンポーネントの
- * <script> に import "@anyblades/blades/layered/<部品>"; を書く。部品は前提の部品を読み込まない
+ * <script> に import "@anyblades/blades/<部品>"; を書く。部品は前提の部品を読み込まない
  * (modal は card、group と dropdown は content の button と forms の basics、forms の追加分は basics が
  * 前提)ので、前提がここに無ければ並べて import する。ほぼ全画面で使う部品、ここの CSS が --pico-* を
  * 引く部品、上の順番でぶつかる部品はここに足す。部品だけが使う変数(--pico-card-* など)は
@@ -43,18 +43,18 @@
  * forms の input-color / input-datetime / input-range / input-search、
  * components の dropdown / group / loading / tooltip
  */
-@import "@anyblades/blades/layered/variables";
-@import "@anyblades/blades/layered/layout/document";
-@import "@anyblades/blades/layered/layout/section";
-@import "@anyblades/blades/layered/content/typography";
-@import "@anyblades/blades/layered/content/link";
-@import "@anyblades/blades/layered/content/button";
-@import "@anyblades/blades/layered/content/embedded-content";
-@import "@anyblades/blades/layered/content/misc";
-@import "@anyblades/blades/layered/forms/basics";
-@import "@anyblades/blades/layered/forms/checkbox-radio-switch";
-@import "@anyblades/blades/layered/components/nav";
-@import "@anyblades/blades/layered/utilities";
+@import "@anyblades/blades/variables";
+@import "@anyblades/blades/layout/document";
+@import "@anyblades/blades/layout/section";
+@import "@anyblades/blades/content/typography";
+@import "@anyblades/blades/content/link";
+@import "@anyblades/blades/content/button";
+@import "@anyblades/blades/content/embedded-content";
+@import "@anyblades/blades/content/misc";
+@import "@anyblades/blades/forms/basics";
+@import "@anyblades/blades/forms/checkbox-radio-switch";
+@import "@anyblades/blades/components/nav";
+@import "@anyblades/blades/utilities";
 
 :root {
   /* フォントは束ねない(1 家族 1.3MB を全員に落とさせる価値が無い)。Windows なら BIZ UDPGothic、

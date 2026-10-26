@@ -1,6 +1,6 @@
 <script lang="ts">
   import { KIND_LABELS, KINDS, yen } from "#lib/product.js";
-  import "@anyblades/blades/layered/content/table";
+  import "@anyblades/blades/content/table";
   import type { PageProps } from "./$types";
 
   let { data, form }: PageProps = $props();

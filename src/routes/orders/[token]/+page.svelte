@@ -3,7 +3,7 @@
   import OrderItems from "#lib/components/OrderItems.svelte";
   import { handWord, methodLabel, STATUS } from "#lib/order.js";
   import { yen } from "#lib/product.js";
-  import "@anyblades/blades/layered/content/code";
+  import "@anyblades/blades/content/code";
   import type { PageProps } from "./$types";
 
   let { data }: PageProps = $props();

@@ -5,9 +5,9 @@
 
   import RichTextEditor from "#lib/components/RichTextEditor.svelte";
   import { imageUrl, imageUrlOf, KIND_LABELS, yen } from "#lib/product.js";
-  import "@anyblades/blades/layered/content/code";
-  import "@anyblades/blades/layered/forms/input-file";
-  import "@anyblades/blades/layered/components/progress";
+  import "@anyblades/blades/content/code";
+  import "@anyblades/blades/forms/input-file";
+  import "@anyblades/blades/components/progress";
   import type { PageProps } from "./$types";
 
   // 公開ページ(/items/[slug])と同じ並びで、その場所をそのまま編集する。

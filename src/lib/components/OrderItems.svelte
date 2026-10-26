@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "@anyblades/blades/layered/content/table";
+  import "@anyblades/blades/content/table";
   import { itemLabel, type OrderItem } from "#lib/order.js";
   import { yen } from "#lib/product.js";
 

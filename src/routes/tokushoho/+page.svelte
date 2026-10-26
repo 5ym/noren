@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "@anyblades/blades/layered/content/table";
+  import "@anyblades/blades/content/table";
   import { TOKUSHOHO_ROWS } from "#lib/shop.js";
 
   import type { PageProps } from "./$types";
