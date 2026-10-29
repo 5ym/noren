@@ -5,7 +5,7 @@
     "": {
       "name": "noren",
       "devDependencies": {
-        "@anyblades/blades": "3.1.0-beta.7",
+        "@anyblades/blades": "3.1.0-rc.1",
         "@axe-core/playwright": "^4.14.0",
         "@playwright/test": "^1.64.1",
         "@sveltejs/adapter-bun": "^1.0.0",
@@ -30,7 +30,7 @@
     },
   },
   "packages": {
-    "@anyblades/blades": ["@anyblades/blades@3.1.0-beta.7", "", {}, "sha512-3Pg0GZosdxQLnBXtoWFQBLLi/wwDGsOkn+eLEf0xCEvqENSLy8Zy05WquYxKsef5mjerc1e88NqliKIdlYQtEA=="],
+    "@anyblades/blades": ["@anyblades/blades@3.1.0-rc.1", "", {}, "sha512-AKQd0UDPbe7QQd50WTt9L3UBWj8Z5YwQNOt5SC+yLyDSDdHW+uCLx5vqQqHGgeGZnNyx4O2kcxGaXXKbftf5Ag=="],
 
     "@axe-core/playwright": ["@axe-core/playwright@4.14.0", "", { "dependencies": { "axe-core": "~4.14.0" }, "peerDependencies": { "playwright-core": ">= 1.0.0" } }, "sha512-SGUhG5PIHd2eMdpgBF2PyQLOhX+qyDR2PT4cmoS4Qk2ak+jX/rrSvst9l0PGv5WTHolKpUMvVmoHpr4cZgf1RQ=="],
 
