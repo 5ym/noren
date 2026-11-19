@@ -1,4 +1,4 @@
-FROM oven/bun:1.4.4-slim AS builder
+FROM oven/bun:1.4.5-slim AS builder
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 COPY package.json bun.lock ./
@@ -23,7 +23,7 @@ RUN mkdir -p /out/data /out/files
 # 配信用はシェルもパッケージマネージャも無い distroless の Bun。uid 1000:1000 で動かす
 # (distroless には bun という名前のユーザーが無いので数字で書く)。
 # ボリュームの DB とファイルは 1000 のものになる。
-FROM oven/bun:1.4.4-distroless
+FROM oven/bun:1.4.5-distroless
 WORKDIR /usr/src/app
 EXPOSE 3000
 ENV NODE_ENV=production
