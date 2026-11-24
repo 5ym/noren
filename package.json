@@ -16,7 +16,7 @@
   "dependencies": {},
   "devDependencies": {
     "@anyblades/blades": "^3.1.4",
-    "@axe-core/playwright": "^4.14.0",
+    "@axe-core/playwright": "^4.14.1",
     "@playwright/test": "^1.65.1",
     "@sveltejs/adapter-bun": "^1.0.2",
     "@sveltejs/kit": "^3.4.0",
