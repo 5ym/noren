@@ -13,18 +13,18 @@ Stripe Checkout で払うとファイルがメールで届くダウンロード�
 
 ## 技術スタック
 
-| 領域           | 使用技術                                                                                  |
-| -------------- | ----------------------------------------------------------------------------------------- |
-| ランタイム     | [Bun](https://bun.sh) 1.4.4                                                               |
-| フレームワーク | [SvelteKit 3](https://svelte.dev/docs/kit)(Svelte 5 / runes)+ adapter-bun                 |
-| データベース   | SQLite(`bun:sqlite`、素の SQL の薄い層)                                                   |
-| UI             | [Blades](https://blades.ninja/) の Pico(素の CSS、使う部品だけ読む)。明暗は OS に合わせる |
-| 商品説明       | [Tiptap](https://tiptap.dev/)(保存時にサーバで許可したタグだけに落とす)                   |
-| 決済           | Stripe Checkout(オンライン)、現金・Square POS(会場)                                       |
-| メール         | SMTP(自前のクライアント `src/lib/server/smtp.ts`)                                         |
-| ログイン       | OIDC(認可コード + PKCE、自前のクライアント `src/lib/server/oidc.ts`)                      |
-| QR             | 生成はサーバで SVG(`qrcode`)、読み取りは `html5-qrcode`                                   |
-| Lint/Format    | [oxlint](https://oxc.rs/docs/guide/usage/linter) + `bun fmt`                              |
+| 領域           | 使用技術                                                                                |
+| -------------- | --------------------------------------------------------------------------------------- |
+| ランタイム     | [Bun](https://bun.sh) 1.4.4                                                             |
+| フレームワーク | [SvelteKit 3](https://svelte.dev/docs/kit)(Svelte 5 / runes)+ adapter-bun               |
+| データベース   | SQLite(`bun:sqlite`、素の SQL の薄い層)                                                 |
+| UI             | [Blades](https://blades.dev/) の Pico(素の CSS、使う部品だけ読む)。明暗は OS に合わせる |
+| 商品説明       | [Tiptap](https://tiptap.dev/)(保存時にサーバで許可したタグだけに落とす)                 |
+| 決済           | Stripe Checkout(オンライン)、現金・Square POS(会場)                                     |
+| メール         | SMTP(自前のクライアント `src/lib/server/smtp.ts`)                                       |
+| ログイン       | OIDC(認可コード + PKCE、自前のクライアント `src/lib/server/oidc.ts`)                    |
+| QR             | 生成はサーバで SVG(`qrcode`)、読み取りは `html5-qrcode`                                 |
+| Lint/Format    | [oxlint](https://oxc.rs/docs/guide/usage/linter) + `bun fmt`                            |
 
 ## 商品の種類
 
