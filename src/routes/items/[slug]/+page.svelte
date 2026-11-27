@@ -9,7 +9,7 @@
     MAX_COUNT,
     qtyField,
   } from "#lib/product.js";
-  import "@anyblades/blades/content/code";
+  import "@sveti/blades/content/code";
   import type { PageProps } from "./$types";
 
   let { data, form }: PageProps = $props();

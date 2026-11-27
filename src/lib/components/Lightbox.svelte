@@ -1,6 +1,6 @@
 <script lang="ts">
-  import "@anyblades/blades/components/card";
-  import "@anyblades/blades/components/modal";
+  import "@sveti/blades/components/card";
+  import "@sveti/blades/components/modal";
   import Icon from "./Icon.svelte";
 
   /**
